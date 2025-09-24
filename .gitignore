@@ -1,1 +1,3 @@
 preparations/
+.direnv
+.venv
