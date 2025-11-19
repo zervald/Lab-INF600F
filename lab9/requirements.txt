@@ -1,8 +1,0 @@
-imageio
-jupyter
-jupyter-client
-jupytext
-matplotlib
-numpy
-scikit-image
-# scipy

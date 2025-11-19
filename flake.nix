@@ -50,49 +50,60 @@
             ];
 
           python = pkgs."python${concatMajorMinor version}";
+
+          libs = with pkgs; [
+            stdenv.cc.cc.lib
+            taglib
+            libxml2
+            libxslt
+            libzip
+            zlib
+          ];
         in
         {
           default = pkgs.mkShell {
             venvDir = ".venv";
 
+            # use requirements file with pip
+            postVenvCreation = ''
+              pip install -r requirements.txt
+            '';
+
             postShellHook = ''
               venvVersionWarn() {
-              	local venvVersion
-              	venvVersion="$("$venvDir/bin/python" -c 'import platform; print(platform.python_version())')"
+              local venvVersion
+              venvVersion="$("$venvDir/bin/python" -c 'import platform; print(platform.python_version())')"
 
-              	[[ "$venvVersion" == "${python.version}" ]] && return
+              [[ "$venvVersion" == "${python.version}" ]] && return
 
-              	cat <<EOF
+              cat <<EOF
               Warning: Python version mismatch: [$venvVersion (venv)] != [${python.version}]
-                       Delete '$venvDir' and reload to rebuild for version ${python.version}
+              Delete '$venvDir' and reload to rebuild for version ${python.version}
               EOF
               }
 
               venvVersionWarn
+              # unset SOURCE_DATE_EPOCH
             '';
 
-            packages = with python.pkgs; [
-              venvShellHook
-              pip
-              # jupyter
-              # jupytext
-              # numpy
-              # scipy
-              # scikit-image
-              # matplotlib
-              # imageio
+            packages =
+              with python.pkgs;
+              [
+                venvShellHook
+                pip
 
-              # Add whatever else you'd like here.
-              # pkgs.basedpyright
+                # numpy
+                # matplotlib
+                # imageio
+                # scikit-image
+                # scipy
 
-              # pkgs.black
-              # or
-              # python.pkgs.black
-
-              # pkgs.ruff
-              # or
-              # python.pkgs.ruff
-            ];
+                ipykernel
+                jupyter-client
+                jupytext
+              ]
+              ++ libs;
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libs;
           };
         }
       );
